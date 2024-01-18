@@ -3,12 +3,12 @@
     Code
       res
     Output
-       Species    emmean     SE  df lower.CL upper.CL
-       setosa       6.15 0.3371 143     5.49     6.82
-       versicolor   5.72 0.0668 143     5.59     5.85
-       virginica    5.41 0.1488 143     5.11     5.70
-      
-      Confidence level used: 0.95 
+      # A tibble: 3 x 6
+        Species    estimate std.error    df conf.low conf.high
+        <chr>         <dbl>     <dbl> <dbl>    <dbl>     <dbl>
+      1 setosa         6.15    0.337    143     5.49      6.82
+      2 versicolor     5.72    0.0668   143     5.59      5.85
+      3 virginica      5.41    0.149    143     5.11      5.70
 
 # s_ancova works with healthy input
 
@@ -88,4 +88,34 @@
         Difference in Adjusted Means                               -1.60            -2.12     
           95% CI                                               (-1.98, -1.22)   (-2.66, -1.58)
           p-value                                                 <0.0001          <0.0001    
+
+# summarize_ancova works with irregular arm levels
+
+    Code
+      res
+    Output
+                                  ARM A       ARM A Subgroup   ARM C 
+                                 (N=69)           (N=73)       (N=58)
+      ———————————————————————————————————————————————————————————————
+      Unadjusted comparison                                          
+        n                          552             584          464  
+        Mean                      0.01             0.01        -0.05 
+        Difference in Means       0.06             0.06              
+          95% CI              (-0.07, 0.19)   (-0.06, 0.19)          
+          p-value                0.3442           0.3186             
+
+---
+
+    Code
+      res
+    Output
+                                  ARM A         ARM B (x)     ARM C 
+                                 (N=69)          (N=73)       (N=58)
+      ——————————————————————————————————————————————————————————————
+      Unadjusted comparison                                         
+        n                          552             584         464  
+        Mean                      0.01            0.01        -0.05 
+        Difference in Means       0.06            0.06              
+          95% CI              (-0.07, 0.19)   (-0.06, 0.19)         
+          p-value                0.3442          0.3186             
 

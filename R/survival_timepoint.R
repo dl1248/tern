@@ -13,36 +13,28 @@
 #'   * `conf_type` (`string`)\cr confidence interval type. Options are "plain" (default), "log", "log-log",
 #'     see more in [survival::survfit()]. Note option "none" is no longer supported.
 #'   * `time_point` (`number`)\cr survival time point of interest.
+#' @param method (`string`)\cr either `surv` (survival estimations),
+#'   `surv_diff` (difference in survival with the control) or `both`.
+#' @param table_names_suffix (`string`)\cr optional suffix for the `table_names` used for the `rtables` to
+#'   avoid warnings from duplicate table names.
+#' @param .stats (`character`)\cr statistics to select for the table. Run `get_stats("surv_timepoint")`
+#'   to see available statistics for this function.
+#' @param .indent_mods (named `vector` of `integer`)\cr indent modifiers for the labels. Each element of the vector
+#'   should be a name-value pair with name corresponding to a statistic specified in `.stats` and value the indentation
+#'   for that statistic's row label.
 #'
 #' @name survival_timepoint
+#' @order 1
 NULL
 
-#' @describeIn survival_timepoint Statistics Function which analyzes survival rate.
+#' @describeIn survival_timepoint Statistics function which analyzes survival rate.
 #'
-#' @return The statistics are:
-#' \describe{
-#'   \item{pt_at_risk}{patients remaining at risk.}
-#'   \item{event_free_rate}{event free rate (%).}
-#'   \item{rate_se}{standard error of event free rate.}
-#'   \item{rate_ci}{confidence interval for event free rate.}
-#' }
-#'
-#' @examples
-#' library(dplyr)
-#'
-#' adtte_f <- tern_ex_adtte %>%
-#'   filter(PARAMCD == "OS") %>%
-#'   mutate(
-#'     AVAL = day2month(AVAL),
-#'     is_event = CNSR == 0
-#'   )
-#' df <- adtte_f %>%
-#'   filter(ARMCD == "ARM A")
-#'
-#' # Internal function - s_surv_timepoint
-#' \dontrun{
-#' s_surv_timepoint(df, .var = "AVAL", time_point = 7, is_event = "is_event")
-#' }
+#' @return
+#' * `s_surv_timepoint()` returns the statistics:
+#'   * `pt_at_risk`: Patients remaining at risk.
+#'   * `event_free_rate`: Event-free rate (%).
+#'   * `rate_se`: Standard error of event free rate.
+#'   * `rate_ci`: Confidence interval for event free rate.
 #'
 #' @keywords internal
 s_surv_timepoint <- function(df,
@@ -85,14 +77,11 @@ s_surv_timepoint <- function(df,
   )
 }
 
-#' @describeIn survival_timepoint Formatted Analysis function which can be further customized by calling
-#'   [rtables::make_afun()] on it. It is used as `afun` in [rtables::analyze()].
+#' @describeIn survival_timepoint Formatted analysis function which is used as `afun` in `surv_timepoint()`
+#'   when `method = "surv"`.
 #'
-#' @examples
-#' # Internal function - a_surv_timepoint
-#' \dontrun{
-#' a_surv_timepoint(df, .var = "AVAL", time_point = 7, is_event = "is_event")
-#' }
+#' @return
+#' * `a_surv_timepoint()` returns the corresponding list with formatted [rtables::CellValue()].
 #'
 #' @keywords internal
 a_surv_timepoint <- make_afun(
@@ -111,31 +100,13 @@ a_surv_timepoint <- make_afun(
   )
 )
 
-#' @describeIn survival_timepoint Statistics Function which analyzes difference between two survival rates.
+#' @describeIn survival_timepoint Statistics function which analyzes difference between two survival rates.
 #'
-#' @return The statistics are:
-#' \describe{
-#'   \item{rate_diff}{event free rate difference between two groups.}
-#'   \item{rate_diff_ci}{confidence interval for the difference.}
-#'   \item{ztest_pval}{p-value to test the difference is 0.}
-#' }
-#'
-#' @examples
-#' df_ref_group <- adtte_f %>%
-#'   filter(ARMCD == "ARM B")
-#'
-#' # Internal function - s_surv_timepoint_diff
-#' \dontrun{
-#' s_surv_timepoint_diff(df, df_ref_group, .in_ref_col = TRUE, .var = "AVAL", is_event = "is_event")
-#' s_surv_timepoint_diff(
-#'   df,
-#'   df_ref_group,
-#'   .in_ref_col = FALSE,
-#'   .var = "AVAL",
-#'   time_point = 7,
-#'   is_event = "is_event"
-#' )
-#' }
+#' @return
+#' * `s_surv_timepoint_diff()` returns the statistics:
+#'   * `rate_diff`: Event-free rate difference between two groups.
+#'   * `rate_diff_ci`: Confidence interval for the difference.
+#'   * `ztest_pval`: p-value to test the difference is 0.
 #'
 #' @keywords internal
 s_surv_timepoint_diff <- function(df,
@@ -179,30 +150,15 @@ s_surv_timepoint_diff <- function(df,
   )
 }
 
-#' @describeIn survival_timepoint Formatted Analysis function which can be further customized by calling
-#'   [rtables::make_afun()] on it. It is used as `afun` in [rtables::analyze()].
+#' @describeIn survival_timepoint Formatted analysis function which is used as `afun` in `surv_timepoint()`
+#'   when `method = "surv_diff"`.
 #'
-#' @examples
-#' # Internal function - a_surv_timepoint_diff
-#' \dontrun{
-#' a_surv_timepoint_diff(
-#'   df,
-#'   df_ref_group,
-#'   .in_ref_col = FALSE,
-#'   .var = "AVAL",
-#'   time_point = 7,
-#'   is_event = "is_event"
-#' )
-#' }
+#' @return
+#' * `a_surv_timepoint_diff()` returns the corresponding list with formatted [rtables::CellValue()].
 #'
 #' @keywords internal
 a_surv_timepoint_diff <- make_afun(
   s_surv_timepoint_diff,
-  .indent_mods = c(
-    rate_diff = 1L,
-    rate_diff_ci = 2L,
-    ztest_pval = 2L
-  ),
   .formats = c(
     rate_diff = "xx.xx",
     rate_diff_ci = "(xx.xx, xx.xx)",
@@ -210,17 +166,25 @@ a_surv_timepoint_diff <- make_afun(
   )
 )
 
-#' @describeIn survival_timepoint Analyze Function which adds the survival rate analysis to the input layout.
-#'   Note that additional formatting arguments can be used here.
+#' @describeIn survival_timepoint Layout-creating function which can take statistics function arguments
+#'   and additional format arguments. This function is a wrapper for [rtables::analyze()].
 #'
-#' @inheritParams argument_convention
-#' @param method (`string`)\cr either `surv` (survival estimations),
-#'   `surv_diff` (difference in survival with the control) or `both`.
-#' @param table_names_suffix (`string`)\cr optional suffix for the `table_names` used for the `rtables` to
-#'   avoid warnings from duplicate table names.
-#' @export
+#' @return
+#' * `surv_timepoint()` returns a layout object suitable for passing to further layouting functions,
+#'   or to [rtables::build_table()]. Adding this function to an `rtable` layout will add formatted rows containing
+#'   the statistics from `s_surv_timepoint()` and/or `s_surv_timepoint_diff()` to the table layout depending on
+#'   the value of `method`.
 #'
 #' @examples
+#' library(dplyr)
+#'
+#' adtte_f <- tern_ex_adtte %>%
+#'   filter(PARAMCD == "OS") %>%
+#'   mutate(
+#'     AVAL = day2month(AVAL),
+#'     is_event = CNSR == 0
+#'   )
+#'
 #' # Survival at given time points.
 #' basic_table() %>%
 #'   split_cols_by(var = "ARMCD", ref_group = "ARM A") %>%
@@ -259,22 +223,36 @@ a_surv_timepoint_diff <- make_afun(
 #'     method = "both"
 #'   ) %>%
 #'   build_table(df = adtte_f)
+#'
+#' @export
+#' @order 2
 surv_timepoint <- function(lyt,
                            vars,
+                           time_point,
+                           is_event,
+                           control = control_surv_timepoint(),
+                           method = c("surv", "surv_diff", "both"),
+                           na_str = default_na_str(),
+                           nested = TRUE,
                            ...,
                            table_names_suffix = "",
                            var_labels = "Time",
                            show_labels = "visible",
-                           method = c("surv", "surv_diff", "both"),
                            .stats = c(
                              "pt_at_risk", "event_free_rate", "rate_ci",
                              "rate_diff", "rate_diff_ci", "ztest_pval"
                            ),
                            .formats = NULL,
                            .labels = NULL,
-                           .indent_mods = NULL) {
+                           .indent_mods = if (method == "both") {
+                             c(rate_diff = 1L, rate_diff_ci = 2L, ztest_pval = 2L)
+                           } else {
+                             c(rate_diff_ci = 1L, ztest_pval = 1L)
+                           }) {
   method <- match.arg(method)
   checkmate::assert_string(table_names_suffix)
+
+  extra_args <- list(time_point = time_point, is_event = is_event, control = control, ...)
 
   f <- list(
     surv = c("pt_at_risk", "event_free_rate", "rate_se", "rate_ci"),
@@ -301,24 +279,22 @@ surv_timepoint <- function(lyt,
     .indent_mods = .indent_mods$surv_diff
   )
 
-  time_point <- list(...)$time_point
+  time_point <- extra_args$time_point
 
   for (i in seq_along(time_point)) {
-    tpt <- time_point[i]
+    extra_args[["time_point"]] <- time_point[i]
 
     if (method %in% c("surv", "both")) {
       lyt <- analyze(
         lyt,
         vars,
-        var_labels = paste(tpt, var_labels),
-        table_names = paste0("surv_", tpt, table_names_suffix),
+        var_labels = paste(time_point[i], var_labels),
+        table_names = paste0("surv_", time_point[i], table_names_suffix),
         show_labels = show_labels,
         afun = afun_surv,
-        extra_args = list(
-          is_event = list(...)$is_event,
-          control = list(...)$control,
-          time_point = tpt
-        )
+        na_str = na_str,
+        nested = nested,
+        extra_args = extra_args
       )
     }
 
@@ -326,15 +302,13 @@ surv_timepoint <- function(lyt,
       lyt <- analyze(
         lyt,
         vars,
-        var_labels = paste(tpt, var_labels),
-        table_names = paste0("surv_diff_", tpt, table_names_suffix),
+        var_labels = paste(time_point[i], var_labels),
+        table_names = paste0("surv_diff_", time_point[i], table_names_suffix),
         show_labels = ifelse(method == "both", "hidden", show_labels),
         afun = afun_surv_diff,
-        extra_args = list(
-          is_event = list(...)$is_event,
-          control = list(...)$control,
-          time_point = tpt
-        )
+        na_str = na_str,
+        nested = nested,
+        extra_args = extra_args
       )
     }
   }

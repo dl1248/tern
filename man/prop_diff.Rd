@@ -2,11 +2,31 @@
 % Please edit documentation in R/prop_diff.R
 \name{prop_diff}
 \alias{prop_diff}
+\alias{estimate_proportion_diff}
 \alias{s_proportion_diff}
 \alias{a_proportion_diff}
-\alias{estimate_proportion_diff}
 \title{Proportion Difference}
 \usage{
+estimate_proportion_diff(
+  lyt,
+  vars,
+  variables = list(strata = NULL),
+  conf_level = 0.95,
+  method = c("waldcc", "wald", "cmh", "ha", "newcombe", "newcombecc", "strat_newcombe",
+    "strat_newcombecc"),
+  weights_method = "cmh",
+  na_str = default_na_str(),
+  nested = TRUE,
+  ...,
+  var_labels = vars,
+  show_labels = "hidden",
+  table_names = vars,
+  .stats = NULL,
+  .formats = NULL,
+  .labels = NULL,
+  .indent_mods = NULL
+)
+
 s_proportion_diff(
   df,
   .var,
@@ -30,29 +50,11 @@ a_proportion_diff(
     "strat_newcombecc"),
   weights_method = "cmh"
 )
-
-estimate_proportion_diff(
-  lyt,
-  vars,
-  ...,
-  var_labels = vars,
-  show_labels = "hidden",
-  table_names = vars,
-  .stats = NULL,
-  .formats = NULL,
-  .labels = NULL,
-  .indent_mods = NULL
-)
 }
 \arguments{
-\item{df}{(\code{data.frame})\cr data set containing all analysis variables.}
+\item{lyt}{(\code{layout})\cr input layout where analyses will be added to.}
 
-\item{.var}{(\code{string})\cr single variable name that is passed by \code{rtables} when requested
-by a statistics function.}
-
-\item{.ref_group}{(\code{data.frame} or \code{vector})\cr the data corresponding to the reference group.}
-
-\item{.in_ref_col}{(\code{logical})\cr \code{TRUE} when working with the reference level, \code{FALSE} otherwise.}
+\item{vars}{(\code{character})\cr variable names for the primary analysis variable to be iterated over.}
 
 \item{variables}{(named \code{list} of \code{string})\cr list of additional analysis variables.}
 
@@ -63,48 +65,75 @@ by a statistics function.}
 \item{weights_method}{(\code{string})\cr weights method. Can be either \code{"cmh"} or \code{"heuristic"}
 and directs the way weights are estimated.}
 
-\item{lyt}{(\code{layout})\cr input layout where analyses will be added to.}
+\item{na_str}{(\code{string})\cr string used to replace all \code{NA} or empty values in the output.}
 
-\item{vars}{(\code{character})\cr variable names for the primary analysis variable to be iterated over.}
+\item{nested}{(\code{flag})\cr whether this layout instruction should be applied within the existing layout structure \emph{if
+possible} (\code{TRUE}, the default) or as a new top-level element (\code{FALSE}). Ignored if it would nest a split.
+underneath analyses, which is not allowed.}
 
-\item{...}{arguments passed to \code{s_proportion_diff()}.}
+\item{...}{additional arguments for the lower level functions.}
 
-\item{var_labels}{character for label.}
+\item{var_labels}{(\code{character})\cr character for label.}
 
-\item{show_labels}{label visibility: one of "default", "visible" and "hidden".}
+\item{show_labels}{(\code{string})\cr label visibility: one of "default", "visible" and "hidden".}
 
 \item{table_names}{(\code{character})\cr this can be customized in case that the same \code{vars} are analyzed multiple times,
 to avoid warnings from \code{rtables}.}
 
-\item{.stats}{(\code{character})\cr statistics to select for the table.}
+\item{.stats}{(\code{character})\cr statistics to select for the table. Run \code{get_stats("estimate_proportion_diff")}
+to see available statistics for this function.}
 
-\item{.formats}{(named \code{character} or \code{list})\cr formats for the statistics.}
+\item{.formats}{(named \code{character} or \code{list})\cr formats for the statistics. See Details in \code{analyze_vars} for more
+information on the \code{"auto"} setting.}
 
 \item{.labels}{(named \code{character})\cr labels for the statistics (without indent).}
 
-\item{.indent_mods}{(named \code{integer})\cr indent modifiers for the labels.}
+\item{.indent_mods}{(named \code{integer})\cr indent modifiers for the labels. Defaults to 0, which corresponds to the
+unmodified default behavior. Can be negative.}
+
+\item{df}{(\code{data.frame})\cr data set containing all analysis variables.}
+
+\item{.var}{(\code{string})\cr single variable name that is passed by \code{rtables} when requested
+by a statistics function.}
+
+\item{.ref_group}{(\code{data.frame} or \code{vector})\cr the data corresponding to the reference group.}
+
+\item{.in_ref_col}{(\code{logical})\cr \code{TRUE} when working with the reference level, \code{FALSE} otherwise.}
+}
+\value{
+\itemize{
+\item \code{estimate_proportion_diff()} returns a layout object suitable for passing to further layouting functions,
+or to \code{\link[rtables:build_table]{rtables::build_table()}}. Adding this function to an \code{rtable} layout will add formatted rows containing
+the statistics from \code{s_proportion_diff()} to the table layout.
+}
+
+\itemize{
+\item \code{s_proportion_diff()} returns a named list of elements \code{diff} and \code{diff_ci}.
+}
+
+\itemize{
+\item \code{a_proportion_diff()} returns the corresponding list with formatted \code{\link[rtables:CellValue]{rtables::CellValue()}}.
+}
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 }
 \section{Functions}{
 \itemize{
+\item \code{estimate_proportion_diff()}: Layout-creating function which can take statistics function arguments
+and additional format arguments. This function is a wrapper for \code{\link[rtables:analyze]{rtables::analyze()}}.
+
 \item \code{s_proportion_diff()}: Statistics function estimating the difference
 in terms of responder proportion.
 
-\item \code{a_proportion_diff()}: Formatted Analysis function which can be further customized by calling
-\code{\link[rtables:make_afun]{rtables::make_afun()}} on it. It is used as \code{afun} in \code{\link[rtables:analyze]{rtables::analyze()}}.
-
-\item \code{estimate_proportion_diff()}: Adds a descriptive analyze layer to \code{rtables}
-pipelines. The analysis is applied to a \code{dataframe} and return the
-estimations, in \code{rcells}. The ellipsis (\code{...}) conveys arguments to
-\code{s_proportion_diff()}, for instance \code{na.rm = FALSE} if missing data
-should be accounted for.
+\item \code{a_proportion_diff()}: Formatted analysis function which is used as \code{afun} in \code{estimate_proportion_diff()}.
 
 }}
+\note{
+When performing an unstratified analysis, methods \code{"cmh"}, \code{"strat_newcombe"}, and \code{"strat_newcombecc"} are
+not permitted.
+}
 \examples{
-# Summary
-
 ## "Mid" case: 4/4 respond in group A, 1/2 respond in group B.
 nex <- 100 # Number of example rows
 dta <- data.frame(
@@ -114,6 +143,16 @@ dta <- data.frame(
   "f2" = sample(c("x", "y", "z"), nex, TRUE),
   stringsAsFactors = TRUE
 )
+
+l <- basic_table() \%>\%
+  split_cols_by(var = "grp", ref_group = "B") \%>\%
+  estimate_proportion_diff(
+    vars = "rsp",
+    conf_level = 0.90,
+    method = "ha"
+  )
+
+build_table(l, df = dta)
 
 s_proportion_diff(
   df = subset(dta, grp == "A"),
@@ -143,16 +182,6 @@ a_proportion_diff(
   conf_level = 0.90,
   method = "ha"
 )
-
-l <- basic_table() \%>\%
-  split_cols_by(var = "grp", ref_group = "B") \%>\%
-  estimate_proportion_diff(
-    vars = "rsp",
-    conf_level = 0.90,
-    method = "ha"
-  )
-
-build_table(l, df = dta)
 
 }
 \seealso{
